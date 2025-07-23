@@ -1,0 +1,13 @@
+{
+	"name": "funtico-frontend-js-sdk-demo",
+	"version": "1.0.0",
+	"scripts": {
+		"serve": "http-server . -p 3000"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"http-server": "^14.1.1"
+	}
+}

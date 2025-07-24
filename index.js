@@ -1,6 +1,6 @@
 async function main() {
 	const funticoSDK = new FunticoSDK({
-		authClientId: "ZozwXMVOkIhFIeC3J91rpF4bvxuNFYnCEv29aG2GbjT",
+		authClientId: "mock_store_fe",
 		env: "staging",
 	});
 
@@ -74,7 +74,7 @@ async function main() {
 	async function login() {
 		const { codeVerifier, redirectUrl, state } =
 			await funticoSDK.signInWithFuntico({
-				callbackUrl: new URL(window.location.origin).toString(),
+				callbackUrl: window.location.origin,
 			});
 
 		sessionStorage.setItem(`pkce_${state}`, codeVerifier);
@@ -187,6 +187,7 @@ async function main() {
 			logoutBtn.style.display = "none";
 			disableGame();
 		}
+	}
 
 	// Game functions
 	function enableGame() {

@@ -29,10 +29,7 @@ async function main() {
 					url: window.location.href,
 				});
 
-				tokenStorage.setTokens(
-					tokens.accessToken,
-					tokens.refreshToken,
-				);
+				tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
 
 				window.history.replaceState(
 					{},
@@ -70,7 +67,7 @@ async function main() {
 			};
 
 			document.getElementById("balance").textContent =
-				`Balance: TICO ${currentUser.balance}`;
+				`TICO ${currentUser.balance}`;
 			document.getElementById("username").textContent =
 				currentUser.preferred_username;
 			document.getElementById("email").textContent = currentUser.email;
@@ -98,10 +95,7 @@ async function main() {
 
 		try {
 			const tokens = await funticoSDK.refreshTokens({ refreshToken });
-			tokenStorage.setTokens(
-				tokens.accessToken,
-				tokens.refreshToken,
-			);
+			tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
 			await loadUserData();
 		} catch (error) {
 			tokenStorage.clearTokens();
@@ -117,27 +111,6 @@ async function main() {
 		refreshInterval = setInterval(async () => {
 			await refreshTokens();
 		}, TOKEN_REFRESH_INTERVAL);
-
-		scheduleTokenRefreshBeforeExpiry();
-	}
-
-	function scheduleTokenRefreshBeforeExpiry() {
-		if (refreshTimeout) {
-			clearTimeout(refreshTimeout);
-		}
-
-		const expiryTime = tokenStorage.getTokenExpiry();
-		if (!expiryTime) return;
-
-		const now = Date.now();
-		const timeUntilExpiry = expiryTime - now;
-		const refreshTime = timeUntilExpiry - 10 * 60 * 1000;
-
-		if (refreshTime > 0) {
-			refreshTimeout = setTimeout(async () => {
-				await refreshTokens();
-			}, refreshTime);
-		}
 	}
 
 	async function refreshTokens() {
@@ -154,11 +127,7 @@ async function main() {
 			}
 
 			const tokens = await funticoSDK.refreshTokens({ refreshToken });
-			tokenStorage.setTokens(
-				tokens.accessToken,
-				tokens.refreshToken,
-			);
-			scheduleTokenRefreshBeforeExpiry();
+			tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
 		} catch (error) {
 			logout();
 		} finally {
@@ -167,9 +136,10 @@ async function main() {
 	}
 
 	async function logout() {
-		await funticoSDK.signOut();
+		const { signOutUrl } = await funticoSDK.signOut();
 
 		cleanupSession();
+		window.location.href = signOutUrl;
 	}
 
 	function cleanupSession() {

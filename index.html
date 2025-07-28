@@ -3,38 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>funtico-frontend-js-sdk-demo</title>
+    <title>Funtico SDK Demo - Authentication Example</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://funtico-frontend-js-sdk.pages.dev/funtico-sdk.min.js"></script>
     <script src="index.js" defer></script>
 </head>
 <body>
-    <div class="header">
-        <h1>🎮 Funtico SDK Game Demo</h1>
-        <p>A simple canvas game with Funtico authentication</p>
-    </div>
-
-
-    <div class="login-section">
-        <button id="loginBtn">Login with Funtico</button>
-        <button id="logoutBtn" class="logout-btn" style="display: none;">Sign Out</button>
-    </div>
-
-    <div id="userInfo" class="user-info">
-        <div class="balance" id="balance">Balance: Loading...</div>
-        <div class="user-details">
-            <div><strong>Username:</strong> <span id="username">-</span></div>
-            <div><strong>Email:</strong> <span id="email">-</span></div>
+    <div class="container">
+        <div class="header">
+            <h1>Funtico SDK Authentication Demo</h1>
+            <p>OAuth2 + PKCE authentication with automatic token refresh</p>
         </div>
-    </div>
 
-    <canvas id="gameCanvas" width="600" height="400"></canvas>
-    
-    <div class="game-info">
-        <p id="gameInstructions">Please login to start playing!</p>
-        <div id="gameControls" style="display: none;">
-            <p><small>Use WASD or Arrow Keys to move the green square. Collect the red dots!</small></p>
-            <p>Score: <span id="score">0</span></p>
+        <div class="auth-section">
+            <button id="loginBtn" class="btn btn-primary">Login with Funtico</button>
+            <button id="logoutBtn" class="btn btn-logout" style="display: none;">Sign Out</button>
+        </div>
+
+        <div id="userInfo" class="user-info">
+            <h2>User Information</h2>
+            <div class="info-row">
+                <strong>Username:</strong> <span id="username">-</span>
+            </div>
+            <div class="info-row">
+                <strong>Email:</strong> <span id="email">-</span>
+            </div>
+            <div class="info-row balance">
+                <strong>Balance:</strong> <span id="balance">Loading...</span>
+            </div>
         </div>
     </div>
 </body>

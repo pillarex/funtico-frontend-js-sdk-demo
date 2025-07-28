@@ -5,10 +5,6 @@ async function main() {
 	});
 
 	let currentUser = null;
-	let refreshInterval = null;
-	let refreshTimeout = null;
-	let isRefreshing = false;
-	const TOKEN_REFRESH_INTERVAL = 50 * 60 * 1000;
 
 	const loginBtn = document.getElementById("loginBtn");
 	const logoutBtn = document.getElementById("logoutBtn");
@@ -29,7 +25,7 @@ async function main() {
 					url: window.location.href,
 				});
 
-				tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+				tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken, tokens.idToken);
 
 				window.history.replaceState(
 					{},
@@ -75,9 +71,8 @@ async function main() {
 			userInfoElement.classList.add("show");
 			loginBtn.style.display = "none";
 			logoutBtn.style.display = "inline-block";
-			startTokenRefreshTimer();
 		} catch (error) {
-			if (error.status === 401) {
+			if (isSDKError(error) && error.name === "auth_error") {
 				await attemptTokenRefresh();
 			} else {
 				logout();
@@ -95,7 +90,7 @@ async function main() {
 
 		try {
 			const tokens = await funticoSDK.refreshTokens({ refreshToken });
-			tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+			tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken, tokens.idToken);
 			await loadUserData();
 		} catch (error) {
 			tokenStorage.clearTokens();
@@ -103,40 +98,12 @@ async function main() {
 		}
 	}
 
-	function startTokenRefreshTimer() {
-		if (refreshInterval) {
-			clearInterval(refreshInterval);
-		}
-
-		refreshInterval = setInterval(async () => {
-			await refreshTokens();
-		}, TOKEN_REFRESH_INTERVAL);
-	}
-
-	async function refreshTokens() {
-		if (isRefreshing) {
-			return;
-		}
-
-		isRefreshing = true;
-
-		try {
-			const refreshToken = tokenStorage.getRefreshToken();
-			if (!refreshToken) {
-				throw new Error("No refresh token available");
-			}
-
-			const tokens = await funticoSDK.refreshTokens({ refreshToken });
-			tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
-		} catch (error) {
-			logout();
-		} finally {
-			isRefreshing = false;
-		}
-	}
-
 	async function logout() {
-		const { signOutUrl } = await funticoSDK.signOut();
+		const idToken = tokenStorage.getIdToken();
+		const { signOutUrl } = await funticoSDK.signOut({
+			postSignOutRedirectUrl: window.location.origin,
+			idTokenHint: idToken
+		});
 
 		cleanupSession();
 		window.location.href = signOutUrl;
@@ -146,16 +113,6 @@ async function main() {
 		tokenStorage.clearTokens();
 		currentUser = null;
 
-		if (refreshInterval) {
-			clearInterval(refreshInterval);
-			refreshInterval = null;
-		}
-
-		if (refreshTimeout) {
-			clearTimeout(refreshTimeout);
-			refreshTimeout = null;
-		}
-
 		userInfoElement.classList.remove("show");
 		loginBtn.style.display = "inline-block";
 		logoutBtn.style.display = "none";
@@ -163,15 +120,6 @@ async function main() {
 
 	loginBtn.addEventListener("click", login);
 	logoutBtn.addEventListener("click", logout);
-
-	window.addEventListener("beforeunload", () => {
-		if (refreshInterval) {
-			clearInterval(refreshInterval);
-		}
-		if (refreshTimeout) {
-			clearTimeout(refreshTimeout);
-		}
-	});
 
 	await handleAuthCallback();
 

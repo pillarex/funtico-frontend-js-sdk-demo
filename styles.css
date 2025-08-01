@@ -111,13 +111,42 @@ body {
     color: #7f8c8d;
 }
 
-.balance {
-    margin-top: 10px;
-    padding-top: 20px;
+.user-picture {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin: 0 auto 10px;
+    display: block;
 }
 
-.balance span {
-    color: #27ae60;
+.score-section {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 2px solid #ecf0f1;
+}
+
+.score-section h3 {
+    color: #2c3e50;
+    margin-bottom: 15px;
     font-size: 1.2rem;
-    font-weight: 600;
+}
+
+.score-input-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.score-input-group input {
+    flex: 1;
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #ecf0f1;
+    border-radius: 4px;
+    transition: border-color 0.3s ease;
+}
+
+.score-input-group input:focus {
+    outline: none;
+    border-color: #3498db;
 }

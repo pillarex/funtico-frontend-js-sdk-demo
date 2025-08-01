@@ -2,7 +2,7 @@
 	"name": "funtico-frontend-js-sdk-demo",
 	"version": "1.0.0",
 	"scripts": {
-		"serve": "http-server . -p 3000"
+		"serve:js": "http-server . -p 3000"
 	},
 	"author": "",
 	"license": "ISC",

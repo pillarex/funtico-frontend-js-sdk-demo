@@ -20,58 +20,68 @@ async function main() {
 			sessionStorage.removeItem(`pkce_${state}`);
 
 			if (codeVerifier) {
-				const tokens = await funticoSDK.getTokens({
-					codeVerifier,
-					url: window.location.href,
-				});
+				try {
+					// SDK now automatically stores tokens internally
+					const tokens = await funticoSDK.getTokens({
+						codeVerifier,
+						url: window.location.href,
+					});
 
-				tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken, tokens.idToken);
+					// No need to manually store tokens anymore
+					// tokenStorage.setTokens is handled automatically by the SDK
 
-				window.history.replaceState(
-					{},
-					document.title,
-					window.location.pathname,
-				);
+					window.history.replaceState(
+						{},
+						document.title,
+						window.location.pathname,
+					);
+				} catch (error) {
+					alert(`Authentication failed: ${JSON.stringify(error)}`);
+				}
 			}
 		}
 	}
 
 	async function login() {
-		const { codeVerifier, redirectUrl, state } =
-			await funticoSDK.signInWithFuntico({
-				callbackUrl: window.location.href,
-			});
+		try {
+			const { codeVerifier, redirectUrl, state } =
+				await funticoSDK.signInWithFuntico({
+					callbackUrl: window.location.href,
+				});
 
-		sessionStorage.setItem(`pkce_${state}`, codeVerifier);
-		window.location.href = redirectUrl;
+			sessionStorage.setItem(`pkce_${state}`, codeVerifier);
+			window.location.href = redirectUrl;
+		} catch (error) {
+			alert(`Login failed: ${JSON.stringify(error)}`);
+		}
 	}
 
 	async function loadUserData() {
 		try {
-			const accessToken = tokenStorage.getAccessToken();
+			// SDK now automatically uses stored access token
+			const userInfo = await funticoSDK.getUserInfo();
 
-			if (!accessToken) {
-				throw new Error("No access token available");
+			currentUser = userInfo;
+
+			const userPictureElement = document.getElementById("userPicture");
+			if (currentUser.picture) {
+				userPictureElement.src = currentUser.picture;
+				userPictureElement.style.display = "block";
+			} else {
+				userPictureElement.style.display = "none";
 			}
-
-			const userInfo = await funticoSDK.getUserInfo({ accessToken });
-			const { balance } = await funticoSDK.getUserBalance({ accessToken });
-
-			currentUser = {
-				...userInfo,
-				balance,
-			};
-
-			document.getElementById("balance").textContent =
-				`TICO ${currentUser.balance}`;
-			document.getElementById("username").textContent =
-				currentUser.preferred_username;
-			document.getElementById("email").textContent = currentUser.email;
+			document.getElementById("username").textContent = currentUser.username;
+			document.getElementById("userId").textContent = currentUser.user_id;
 
 			userInfoElement.classList.add("show");
 			loginBtn.style.display = "none";
 			logoutBtn.style.display = "inline-block";
+
+			document
+				.getElementById("saveScoreBtn")
+				.addEventListener("click", saveScore);
 		} catch (error) {
+			alert(`Failed to load user data: ${JSON.stringify(error)}`);
 			if (isSDKError(error) && error.name === "auth_error") {
 				await attemptTokenRefresh();
 			} else {
@@ -81,6 +91,7 @@ async function main() {
 	}
 
 	async function attemptTokenRefresh() {
+		// Check if refresh token exists before attempting refresh
 		const refreshToken = tokenStorage.getRefreshToken();
 
 		if (!refreshToken) {
@@ -89,27 +100,39 @@ async function main() {
 		}
 
 		try {
-			const tokens = await funticoSDK.refreshTokens({ refreshToken });
-			tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken, tokens.idToken);
+			// SDK now automatically uses stored refresh token and stores new tokens
+			const tokens = await funticoSDK.refreshTokens();
+			
+			// No need to manually store tokens anymore
+			// tokenStorage.setTokens is handled automatically by the SDK
+			
 			await loadUserData();
 		} catch (error) {
-			tokenStorage.clearTokens();
+			// SDK automatically clears tokens on refresh failure
 			logout();
 		}
 	}
 
 	async function logout() {
-		const idToken = tokenStorage.getIdToken();
-		const { signOutUrl } = await funticoSDK.signOut({
-			postSignOutRedirectUrl: window.location.origin,
-			idTokenHint: idToken
-		});
+		try {
+			// SDK now automatically uses stored ID token and clears tokens
+			const { signOutUrl } = await funticoSDK.signOut({
+				postSignOutRedirectUrl: window.location.origin,
+			});
 
-		cleanupSession();
-		window.location.href = signOutUrl;
+			// No need to manually clear tokens anymore
+			// tokenStorage.clearTokens() is handled automatically by the SDK
+			
+			cleanupSession();
+			window.location.href = signOutUrl;
+		} catch (error) {
+			alert(`Logout failed: ${JSON.stringify(error)}`);
+			cleanupSession();
+		}
 	}
 
 	function cleanupSession() {
+		// Manual token clearing as a fallback (SDK should handle this automatically)
 		tokenStorage.clearTokens();
 		currentUser = null;
 
@@ -118,13 +141,43 @@ async function main() {
 		logoutBtn.style.display = "none";
 	}
 
+	async function saveScore() {
+		const scoreInput = document.getElementById("scoreInput");
+		const score = parseInt(scoreInput.value, 10);
+
+		if (isNaN(score) || score !== parseFloat(scoreInput.value)) {
+			alert("Please enter a valid integer score");
+			return;
+		}
+
+		try {
+			// SDK automatically handles authentication for score saving
+			await funticoSDK.saveScore(score);
+			alert("Score saved successfully!");
+			scoreInput.value = "";
+		} catch (error) {
+			alert(`Failed to save score: ${JSON.stringify(error)}`);
+		}
+	}
+
 	loginBtn.addEventListener("click", login);
 	logoutBtn.addEventListener("click", logout);
 
-	await handleAuthCallback();
+	try {
+		await handleAuthCallback();
+	} catch (error) {
+		alert(`Auth callback failed: ${JSON.stringify(error)}`);
+	}
 
 	if (tokenStorage.hasValidTokens()) {
-		await loadUserData();
+		try {
+			await loadUserData();
+			document
+				.getElementById("saveScoreBtn")
+				.addEventListener("click", saveScore);
+		} catch (error) {
+			alert(`Failed to load user data: ${JSON.stringify(error)}`);
+		}
 	}
 }
 

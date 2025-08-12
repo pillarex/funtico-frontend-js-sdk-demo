@@ -39,27 +39,18 @@ async function main() {
 			document
 				.getElementById("saveScoreBtn")
 				.addEventListener("click", saveScore);
-		} catch (error) {
+		} catch {
 			cleanupSession();
 		}
 	}
 
 	async function saveScore() {
 		const scoreInput = document.getElementById("scoreInput");
-		const score = parseInt(scoreInput.value, 10);
+		const score = Number(scoreInput.value);
 
-		if (isNaN(score) || score !== parseFloat(scoreInput.value)) {
-			alert("Please enter a valid integer score");
-			return;
-		}
-
-		try {
-			await funticoSDK.saveScore(score);
-			alert("Score saved successfully!");
-			scoreInput.value = "";
-		} catch (error) {
-			alert(`Failed to save score: ${JSON.stringify(error)}`);
-		}
+		await funticoSDK.saveScore(score);
+		alert("Score saved successfully!");
+		scoreInput.value = "";
 	}
 
 	loginBtn.addEventListener("click", () =>

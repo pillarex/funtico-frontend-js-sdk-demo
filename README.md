@@ -1,4 +1,4 @@
-# Funtico SDK Demo
+# Funtico Frontend JS SDK Demo
 
 ## How to Run
 

@@ -1,7 +1,6 @@
 async function main() {
 	const funticoSDK = new FunticoSDK({
 		authClientId: "mock_store_fe",
-		env: "staging",
 	});
 
 	let currentUser = null;
